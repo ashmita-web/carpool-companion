@@ -65,6 +65,8 @@ export default function Auth() {
         await signIn(formData.email, formData.password)
       } else {
         await signUp(formData.email, formData.password, formData.fullName)
+        setIsLogin(true) // Switch to login mode
+        setErrors({ submit: 'Account created successfully! Please sign in.' }) // Show message
       }
     } catch (error: any) {
       setErrors({ submit: error.message })
@@ -159,8 +161,8 @@ export default function Auth() {
           </div>
 
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
-              <p className="text-sm text-red-600">{errors.submit}</p>
+            <div className="bg-green-50 border border-green-200 rounded-md p-3">
+              <p className="text-sm text-green-600">{errors.submit}</p>
             </div>
           )}
 

@@ -182,7 +182,7 @@ export default function Home() {
           </p>
           {!user && (
             <Link to="/auth">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+              <Button size="lg" className="bg-purple text-white-600 hover:bg-light-blue-100">
                 Get Started Today
               </Button>
             </Link>
