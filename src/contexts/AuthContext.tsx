@@ -52,12 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         data: {
-          full_name: fullName, // Make sure this matches your Supabase metadata column
+          full_name: fullName,
         },
+        emailRedirectTo: `${window.location.origin}/dashboard`, // optional but recommended
       },
     })
+
     if (error) throw error
   }
+
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
