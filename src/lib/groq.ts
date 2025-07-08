@@ -56,7 +56,7 @@ export async function matchRides(rideRequest: any, availableRides: any[]): Promi
   Return a JSON array of matched rides with compatibility scores (0-100).`
 
   const userPrompt = `Match this ride request:
-  - Pickup: ${rideRequest.pickup_location} (${rideRequest.pickup_lat}, ${rideRequest.pickup_lng})
+  - Pickup: ${rideRequest.pickupLocation} (${rideRequest.pickup_lat}, ${rideRequest.pickup_lng})
   - Dropoff: ${rideRequest.dropoff_location} (${rideRequest.dropoff_lat}, ${rideRequest.dropoff_lng})
   - Time: ${rideRequest.departure_time}
   - Preferences: ${rideRequest.preferences || 'None'}
