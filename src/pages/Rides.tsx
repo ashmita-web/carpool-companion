@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Plus, MapPin, Calendar, Users, DollarSign, User, Shield } from 'lucide-react'
+import { Search, Plus, MapPin, Calendar, Users, DollarSign, User, Shield, Music, Cigarette, Heart, UserCheck } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { usePremium, usePremiumGuard } from '../hooks/usePremium'
 import { supabase } from '../lib/supabase'
 import Button from '../components/UI/Button'
 import Input from '../components/UI/Input'
 import LocationInput from '../components/Maps/LocationInput'
+import PremiumBadge from '../components/UI/PremiumBadge'
+import PremiumTooltip from '../components/UI/PremiumTooltip'
 import { format } from 'date-fns'
 
 interface RideOffer {
@@ -24,12 +27,15 @@ interface RideOffer {
     full_name: string
     email: string
     eco_coins: number
-    verified: boolean
+    is_verified: boolean
+    is_premium: boolean
   }
 }
 
 export default function Rides() {
   const { user } = useAuth()
+  const { isPremium } = usePremium()
+  const { requirePremium } = usePremiumGuard()
   const [activeTab, setActiveTab] = useState<'find' | 'offer'>('find')
   const [rideOffers, setRideOffers] = useState<RideOffer[]>([])
   const [loading, setLoading] = useState(false)
@@ -40,7 +46,12 @@ export default function Rides() {
   const [searchForm, setSearchForm] = useState({
     origin: '',
     destination: '',
-    date: ''
+    date: '',
+    // Premium filters
+    smoking: '',
+    music: '',
+    pets: '',
+    personality: ''
   })
   
   // Offer form state
@@ -74,11 +85,13 @@ export default function Rides() {
             full_name,
             email,
             eco_coins,
-            verified
+            is_verified,
+            is_premium
           )
         `)
         .eq('type', 'offer')
         .eq('status', 'active')
+        .order('profiles.is_premium', { ascending: false })
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -103,7 +116,8 @@ export default function Rides() {
             full_name,
             email,
             eco_coins,
-            verified
+            is_verified,
+            is_premium
           )
         `)
         .eq('type', 'offer')
@@ -127,7 +141,9 @@ export default function Rides() {
           .lt('departure_time', endDate.toISOString())
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false })
+      const { data, error } = await query
+        .order('profiles.is_premium', { ascending: false })
+        .order('created_at', { ascending: false })
 
       if (error) throw error
       setRideOffers(data || [])
@@ -243,6 +259,11 @@ export default function Rides() {
     }
   }
 
+  const handlePremiumFilterChange = (field: string, value: string) => {
+    requirePremium(() => {
+      setSearchForm({ ...searchForm, [field]: value })
+    })
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -304,6 +325,128 @@ export default function Rides() {
                     />
                   </div>
                   <Button type="submit" loading={searchLoading}>
+                  {/* Premium Filters */}
+                  <div className="border-t pt-4 mb-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                      Advanced Filters
+                      {!isPremium && <span className="ml-2 text-xs text-yellow-600">(Premium Only)</span>}
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {isPremium ? (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <Cigarette className="w-3 h-3 inline mr-1" />
+                              Smoking
+                            </label>
+                            <select
+                              value={searchForm.smoking}
+                              onChange={(e) => setSearchForm({ ...searchForm, smoking: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="no">Non-smoker</option>
+                              <option value="yes">Smoker OK</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <Music className="w-3 h-3 inline mr-1" />
+                              Music
+                            </label>
+                            <select
+                              value={searchForm.music}
+                              onChange={(e) => setSearchForm({ ...searchForm, music: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="pop">Pop</option>
+                              <option value="rock">Rock</option>
+                              <option value="classical">Classical</option>
+                              <option value="none">No music</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <Heart className="w-3 h-3 inline mr-1" />
+                              Pets
+                            </label>
+                            <select
+                              value={searchForm.pets}
+                              onChange={(e) => setSearchForm({ ...searchForm, pets: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="yes">Pet-friendly</option>
+                              <option value="no">No pets</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <UserCheck className="w-3 h-3 inline mr-1" />
+                              Personality
+                            </label>
+                            <select
+                              value={searchForm.personality}
+                              onChange={(e) => setSearchForm({ ...searchForm, personality: e.target.value })}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="introvert">Introvert</option>
+                              <option value="extrovert">Extrovert</option>
+                            </select>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <Cigarette className="w-3 h-3 inline mr-1" />
+                                Smoking
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <Music className="w-3 h-3 inline mr-1" />
+                                Music
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <Heart className="w-3 h-3 inline mr-1" />
+                                Pets
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <UserCheck className="w-3 h-3 inline mr-1" />
+                                Personality
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                        </>
+                      )}
+                    </div>
+                  </div>
                     Search Rides
                   </Button>
                 </form>
@@ -335,6 +478,10 @@ export default function Rides() {
                             <div>
                               <h3 className="font-semibold text-gray-900 flex items-center">
                                 {ride.profiles?.full_name || 'Driver'}
+                                <PremiumBadge 
+                                  isPremium={ride.profiles?.is_premium} 
+                                  isVerified={ride.profiles?.is_verified}
+                                />
                                 {ride.profiles?.verified && (
                                   <Shield className="w-4 h-4 text-green-500 ml-1" />
                                 )}
