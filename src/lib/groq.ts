@@ -13,7 +13,7 @@ interface GroqResponse {
 
 export async function callGroqAPI(messages: GroqMessage[]): Promise<string> {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
-  console.log(' GROQ KEY:', apiKey)
+  console.log('GROQ KEY:', apiKey)
 
   if (!apiKey) {
     throw new Error('Groq API key not configured')
@@ -72,7 +72,7 @@ export async function matchRides(rideRequest: any, availableRides: any[]): Promi
   Return a JSON array of matched rides with compatibility scores (0-100).`
 
   const userPrompt = `Match this ride request:
-  - Pickup: ${rideRequest.pickupLocation} (${rideRequest.pickup_lat}, ${rideRequest.pickup_lng})
+  - Pickup: ${rideRequest.pickup_location} (${rideRequest.pickup_lat}, ${rideRequest.pickup_lng})
   - Dropoff: ${rideRequest.dropoff_location} (${rideRequest.dropoff_lat}, ${rideRequest.dropoff_lng})
   - Time: ${rideRequest.departure_time}
   - Preferences: ${rideRequest.preferences || 'None'}
