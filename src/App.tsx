@@ -6,10 +6,10 @@ import Home from './pages/Home'
 import Auth from './pages/Auth'
 import Dashboard from './pages/Dashboard'
 import FindRides from './pages/FindRides'
-import OfferRide from './pages/OfferRide'
 import ChatAssistant from './pages/ChatAssistant'
 import Rides from './pages/Rides'
 import EcoWallet from './pages/EcoWallet'
+import Upgrade from './pages/Upgrade'
 
 function App() {
   return (
@@ -23,19 +23,12 @@ function App() {
             <Route path="/find-rides" element={<FindRides />} />
             <Route path="/rides" element={<Rides />} />
             <Route path="/eco" element={<EcoWallet />} />
+            <Route path="/upgrade" element={<Upgrade />} />
             <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/offer"
-              element={
-                <ProtectedRoute>
-                  <OfferRide />
                 </ProtectedRoute>
               }
             />

@@ -63,16 +63,6 @@ export default function Header() {
               Eco & Wallet
             </Link>
             <Link
-              to="/offer"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isActive('/offer')
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'text-gray-700 hover:text-blue-600'
-              }`}
-            >
-              Offer Ride
-            </Link>
-            <Link
               to="/chat"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive('/chat')
@@ -166,6 +156,17 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Offer Ride
+              </Link>
+              <Link
+                to="/upgrade"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/upgrade')
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : 'text-gray-700 hover:text-yellow-600'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Go Premium
               </Link>
               <Link
                 to="/chat"
