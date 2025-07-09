@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import React from 'react';
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
 import { Crown, Shield } from 'lucide-react';
 
 interface PremiumBadgeProps {

@@ -1,10 +1,20 @@
+<<<<<<< HEAD
 import { useState } from 'react';
 import { Crown, Star, Shield, Filter, Zap } from 'lucide-react';
+=======
+import React, { useState } from 'react';
+import { Crown, Check, Star, Shield, Filter, Zap } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
 import { usePremium } from '../hooks/usePremium';
 import Button from '../components/UI/Button';
 import Card from '../components/UI/Card';
 
 export default function Upgrade() {
+<<<<<<< HEAD
+=======
+  const { user } = useAuth();
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
   const { isPremium, upgradeToPremium } = usePremium();
   const [upgrading, setUpgrading] = useState(false);
 

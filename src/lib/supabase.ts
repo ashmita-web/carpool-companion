@@ -14,6 +14,7 @@ export interface Profile {
   is_premium: boolean;
 
   is_verified: boolean;
+  is_verified: boolean;
   eco_coins: number;
   total_rides: number;
   co2_saved: number;

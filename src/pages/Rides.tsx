@@ -341,7 +341,11 @@ export default function Rides() {
                             </label>
                             <select
                               value={searchForm.smoking}
+<<<<<<< HEAD
                               onChange={(e) => handlePremiumFilterChange('smoking', e.target.value)}
+=======
+                              onChange={(e) => setSearchForm({ ...searchForm, smoking: e.target.value })}
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                               <option value="">Any</option>
@@ -356,7 +360,11 @@ export default function Rides() {
                             </label>
                             <select
                               value={searchForm.music}
+<<<<<<< HEAD
                               onChange={(e) => handlePremiumFilterChange('smoking', e.target.value)}
+=======
+                              onChange={(e) => setSearchForm({ ...searchForm, music: e.target.value })}
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                               <option value="">Any</option>
@@ -373,7 +381,11 @@ export default function Rides() {
                             </label>
                             <select
                               value={searchForm.pets}
+<<<<<<< HEAD
                               onChange={(e) => handlePremiumFilterChange('pets', e.target.value)}
+=======
+                              onChange={(e) => setSearchForm({ ...searchForm, pets: e.target.value })}
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                               <option value="">Any</option>
@@ -388,7 +400,11 @@ export default function Rides() {
                             </label>
                             <select
                               value={searchForm.personality}
+<<<<<<< HEAD
                               onChange={(e) => handlePremiumFilterChange('personality', e.target.value)}
+=======
+                              onChange={(e) => setSearchForm({ ...searchForm, personality: e.target.value })}
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                               <option value="">Any</option>
@@ -482,7 +498,11 @@ export default function Rides() {
                                   isPremium={ride.profiles?.is_premium} 
                                   isVerified={ride.profiles?.is_verified}
                                 />
+<<<<<<< HEAD
                                 {ride.profiles?.is_verified && (
+=======
+                                {ride.profiles?.verified && (
+>>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
                                   <Shield className="w-4 h-4 text-green-500 ml-1" />
                                 )}
                               </h3>
