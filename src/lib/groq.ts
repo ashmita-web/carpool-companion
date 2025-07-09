@@ -13,10 +13,26 @@ interface GroqResponse {
 
 export async function callGroqAPI(messages: GroqMessage[]): Promise<string> {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY
-  
+  console.log(' GROQ KEY:', apiKey)
+
   if (!apiKey) {
     throw new Error('Groq API key not configured')
   }
+
+  messages.forEach((m, i) => {
+    if (!m.role || typeof m.content !== 'string') {
+      console.warn(`⚠️ Invalid message at index ${i}:`, m)
+    }
+  })
+
+  const payload = {
+    model: 'llama3-70b-8192',
+    messages,
+    temperature: 0.7,
+    max_tokens: 1000
+  }
+
+  console.log(' Sending to Groq:', JSON.stringify(payload, null, 2))
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -25,22 +41,22 @@ export async function callGroqAPI(messages: GroqMessage[]): Promise<string> {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: 'mixtral-8x7b-32768',
-        messages,
-        temperature: 0.7,
-        max_tokens: 1000
-      })
+      body: JSON.stringify(payload) 
     })
 
+    const text = await response.text()
+
     if (!response.ok) {
+      console.error(' Groq API raw error:', text)
       throw new Error(`Groq API error: ${response.status}`)
     }
 
-    const data: GroqResponse = await response.json()
-    return data.choices[0]?.message?.content || 'No response from AI'
+    const data: GroqResponse = JSON.parse(text)
+    console.log(' Groq response parsed:', data)
+
+    return data.choices[0]?.message?.content || '⚠️ No AI response'
   } catch (error) {
-    console.error('Groq API call failed:', error)
+    console.error(' Groq API call failed:', error)
     throw error
   }
 }

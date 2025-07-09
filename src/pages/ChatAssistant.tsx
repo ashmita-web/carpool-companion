@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { callGroqAPI } from '../lib/groq'
 import { supabase } from '../lib/supabase'
 import Button from '../components/UI/Button'
-
+import ReactMarkdown from 'react-markdown'
 interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -122,32 +122,33 @@ export default function ChatAssistant() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-[600px] flex flex-col">
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 mb-1">
-                    {message.role === 'user' ? (
-                      <User className="w-4 h-4" />
-                    ) : (
-                      <Bot className="w-4 h-4" />
-                    )}
-                    <span className="text-xs opacity-75">
-                      {message.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <p className="text-sm">{message.content}</p>
-                </div>
-              </div>
-            ))}
+                {messages.map((message) => (
+        <div
+          key={message.id}
+          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+        >
+          <div
+            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+              message.role === 'user'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-900'
+            }`}
+          >
+            <div className="flex items-center space-x-2 mb-1">
+              {message.role === 'user' ? (
+                <User className="w-4 h-4" />
+              ) : (
+                <Bot className="w-4 h-4" />
+              )}
+              <span className="text-xs opacity-75">
+                {message.timestamp.toLocaleTimeString()}
+              </span>
+            </div>
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
+        </div>
+      ))}
+
             
             {isLoading && (
               <div className="flex justify-start">
