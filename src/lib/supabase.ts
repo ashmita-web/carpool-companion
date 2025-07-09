@@ -12,6 +12,7 @@ export interface Profile {
   phone: string;
   avatar_url?: string;
   is_premium: boolean;
+
   is_verified: boolean;
   eco_coins: number;
   total_rides: number;
