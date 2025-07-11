@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
-import { Crown } from 'lucide-react';
-=======
 import { Crown, Lock } from 'lucide-react';
->>>>>>> a1c537bc7a3f77369435a781fa00183858e95eaf
 
 interface PremiumTooltipProps {
   children: React.ReactNode;

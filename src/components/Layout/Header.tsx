@@ -72,6 +72,16 @@ export default function Header() {
             >
               AI Assistant
             </Link>
+            <Link
+    to="/upgrade"
+    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+      isActive('/upgrade')
+        ? 'bg-yellow-100 text-yellow-700'
+        : 'text-gray-700 hover:text-yellow-600'
+    }`}
+  >
+    Go Premium
+  </Link>
           </nav>
 
           {/* User Menu */}
@@ -146,6 +156,19 @@ export default function Header() {
               >
                 Eco & Wallet
               </Link>
+
+              <Link
+  to="/matches"
+  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+    isActive('/matches')
+      ? 'bg-blue-100 text-blue-700'
+      : 'text-gray-700 hover:text-blue-600'
+  }`}
+  onClick={() => setIsMenuOpen(false)}
+>
+  Match Requests
+</Link>
+
               <Link
                 to="/offer"
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -179,6 +202,8 @@ export default function Header() {
               >
                 AI Assistant
               </Link>
+
+              
             </div>
           </div>
         )}

@@ -7,6 +7,8 @@ import Button from '../components/UI/Button'
 import LocationInput from '../components/Maps/LocationInput'
 import Map from '../components/Maps/Map'
 import { format } from 'date-fns'
+import 'leaflet/dist/leaflet.css';
+
 
 interface RideOffer {
   id: string
@@ -143,7 +145,7 @@ export default function FindRides() {
           <p className="mt-2 text-gray-600">Search for available rides or browse all offers</p>
         </div>
 
-        {/* Search Form */}
+        Search Form
         <form onSubmit={handleSearch} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <LocationInput
@@ -193,7 +195,7 @@ export default function FindRides() {
           )}
         </form>
 
-        {/* Results */}
+        Results
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Ride List */}
           <div>
@@ -279,20 +281,22 @@ export default function FindRides() {
           </div>
 
           {/* Map */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Map View</h2>
-            <Map
-              center={{ lat: 37.7749, lng: -122.4194 }}
-              markers={displayRides.map(ride => ({
-                position: { lat: ride.pickup_lat, lng: ride.pickup_lng },
-                title: `${ride.pickup_location} → ${ride.dropoff_location}`,
-                type: 'offer' as const
-              }))}
-              className="h-96"
-            />
-          </div>
+<div style={{ background: 'yellow', padding: '8px' }}>
+  <h2 className="text-xl font-semibold text-gray-900 mb-4">Map View</h2>
+  <Map
+    center={{ lat: 37.7749, lng: -122.4194 }}
+    markers={displayRides.map(ride => ({
+      position: { lat: ride.pickup_lat, lng: ride.pickup_lng },
+      title: `${ride.pickup_location} → ${ride.dropoff_location}`,
+      type: 'offer' as const
+    }))}
+    className="h-96"
+  />
+</div>
+
         </div>
       </div>
     </div>
   )
 }
+
