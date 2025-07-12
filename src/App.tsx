@@ -10,6 +10,8 @@ import ChatAssistant from './pages/ChatAssistant'
 import Rides from './pages/Rides'
 import EcoWallet from './pages/EcoWallet'
 import Upgrade from './pages/Upgrade'
+import MatchesPage from './pages/matches'
+import 'leaflet/dist/leaflet.css';
 
 function App() {
   return (
@@ -22,6 +24,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/find-rides" element={<FindRides />} />
             <Route path="/rides" element={<Rides />} />
+            <Route path="/matches" element={<MatchesPage />} />
             <Route path="/eco" element={<EcoWallet />} />
             <Route path="/upgrade" element={<Upgrade />} />
             <Route

@@ -6,11 +6,13 @@ import Button from '../components/UI/Button'
 import Input from '../components/UI/Input'
 
 interface UserProfile {
-  id: string
-  full_name: string
-  eco_coins: number
-  total_rides: number
-  co2_saved: number
+  id: string;
+  full_name: string;
+  eco_coins: number;
+  total_rides: number;
+  co2_saved: number;
+  rides_to_next_coin?: number;
+  shared_completed_rides?: number;
 }
 
 interface LeaderboardUser {
@@ -25,8 +27,7 @@ export default function EcoWallet() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
   const [totalCO2Saved, setTotalCO2Saved] = useState(0)
   const [loading, setLoading] = useState(true)
-  
-  // Cost comparison form
+
   const [costForm, setCostForm] = useState({
     distance: '',
     daysPerWeek: '5',
@@ -39,46 +40,84 @@ export default function EcoWallet() {
     fetchLeaderboard()
     fetchTotalCO2Saved()
   }, [user])
-
+  
   const fetchUserData = async () => {
-    if (!user) return
-
+    if (!user) return;
+  
     try {
-      // Get user profile with eco coins
+      // 1. Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single()
-
-      if (profileError) throw profileError
-
-      // Get user's total rides
+        .single();
+  
+      if (profileError) throw profileError;
+  
+      // 2. Fetch user's own completed rides
       const { data: rides, error: ridesError } = await supabase
         .from('rides')
         .select('id')
         .eq('user_id', user.id)
-        .eq('status', 'completed')
-
-      if (ridesError) throw ridesError
-
-      // Calculate CO2 saved (120g per km, assuming average 20km per ride)
-      const totalRides = rides?.length || 0
-      const co2Saved = totalRides * 20 * 0.12 // kg of CO2
-
+        .eq('status', 'completed');
+  
+      if (ridesError) throw ridesError;
+  
+      const totalRides = rides?.length || 0;
+  
+      // 3. Fetch accepted matches where user is driver or rider
+      const { data: matches, error: matchesError } = await supabase
+        .from('matches')
+        .select('ride_id, driver_id, rider_id')
+        .or(`driver_id.eq.${user.id},rider_id.eq.${user.id}`)
+        .eq('status', 'accepted');
+  
+      if (matchesError) throw matchesError;
+  
+      const rideIds = matches?.map((m: any) => m.ride_id) || [];
+  
+      // 4. Fetch statuses for those matched ride_ids
+      const { data: rideDetails, error: rideError } = await supabase
+        .from('rides')
+        .select('id, status')
+        .in('id', rideIds);
+  
+      if (rideError) throw rideError;
+  
+      // 5. Count completed shared rides (only if driver ≠ rider)
+      const sharedCompletedRides =
+        matches?.filter((m: any) => {
+          const ride = rideDetails.find((r: any) => r.id === m.ride_id);
+          return ride?.status === 'completed' && m.driver_id !== m.rider_id;
+        }).length || 0;
+  
+      const ecoCoins = Math.floor(sharedCompletedRides / 5);
+      const ridesToNextCoin = 5 - (sharedCompletedRides % 5);
+      const co2Saved = totalRides * 20 * 0.12;
+  
+      // 6. Update eco_coins in profile
+      await supabase
+        .from('profiles')
+        .update({ eco_coins: ecoCoins })
+        .eq('id', user.id);
+  
+      // 7. Set all eco-related user stats
       setUserProfile({
         ...profile,
+        eco_coins: ecoCoins,
         total_rides: totalRides,
-        co2_saved: co2Saved
-      })
+        co2_saved: co2Saved,
+        rides_to_next_coin: ridesToNextCoin,
+        shared_completed_rides: sharedCompletedRides,
+      });
     } catch (error) {
-      console.error('Error fetching user data:', error)
+      console.error('Error fetching user data:', error);
     }
-  }
+  };
+  
 
   const fetchLeaderboard = async () => {
     try {
-      // Get users with most eco coins this week
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
@@ -90,10 +129,9 @@ export default function EcoWallet() {
 
       if (error) throw error
 
-      // For demo purposes, add weekly rides count (in real app, you'd track this)
       const leaderboardWithRides = data?.map((user) => ({
         ...user,
-        weekly_rides: Math.max(1, Math.floor(user.eco_coins / 5)) // Estimate based on coins
+        weekly_rides: Math.max(1, Math.floor(user.eco_coins / 5))
       })) || []
 
       setLeaderboard(leaderboardWithRides)
@@ -104,7 +142,6 @@ export default function EcoWallet() {
 
   const fetchTotalCO2Saved = async () => {
     try {
-      // Get total completed rides across all users
       const { data, error } = await supabase
         .from('rides')
         .select('id')
@@ -112,9 +149,8 @@ export default function EcoWallet() {
 
       if (error) throw error
 
-      // Calculate total CO2 saved by all users
       const totalRides = data?.length || 0
-      const totalCO2 = totalRides * 20 * 0.12 // kg of CO2
+      const totalCO2 = totalRides * 20 * 0.12
 
       setTotalCO2Saved(totalCO2)
     } catch (error) {
@@ -127,43 +163,28 @@ export default function EcoWallet() {
   const calculateCostComparison = () => {
     const distance = parseFloat(costForm.distance)
     const days = parseInt(costForm.daysPerWeek)
-    
     if (!distance || !days) return
 
-    // Mock cost calculations (in real app, use actual data)
-    const fuelCosts = {
-      petrol: 100, // per liter
-      diesel: 90,
-      cng: 60
-    }
-
-    const fuelEfficiency = {
-      petrol: 15, // km per liter
-      diesel: 20,
-      cng: 18
-    }
+    const fuelCosts = { petrol: 100, diesel: 90, cng: 60 }
+    const fuelEfficiency = { petrol: 15, diesel: 20, cng: 18 }
 
     const fuelCost = fuelCosts[costForm.fuelType as keyof typeof fuelCosts]
     const efficiency = fuelEfficiency[costForm.fuelType as keyof typeof fuelEfficiency]
 
-    // Monthly calculations
-    const monthlyDistance = distance * days * 4.33 // average weeks per month
+    const monthlyDistance = distance * days * 4.33
     const monthlyFuelCost = (monthlyDistance / efficiency) * fuelCost
-    const monthlyToll = distance > 20 ? 800 : 400 // estimated toll
-    const monthlyParking = days * 4.33 * 50 // ₹50 per day
-    const monthlyMaintenance = 2000 // estimated
+    const monthlyToll = distance > 20 ? 800 : 400
+    const monthlyParking = days * 4.33 * 50
+    const monthlyMaintenance = 2000
 
     const totalPersonalCost = monthlyFuelCost + monthlyToll + monthlyParking + monthlyMaintenance
-
-    // Carpool cost (assuming shared with 2 people)
     const carpoolCost = (monthlyFuelCost + monthlyToll) / 2
-
     const savings = totalPersonalCost - carpoolCost
 
     setCostComparison({
       personalCost: totalPersonalCost,
-      carpoolCost: carpoolCost,
-      savings: savings,
+      carpoolCost,
+      savings,
       fuelCost: monthlyFuelCost,
       toll: monthlyToll,
       parking: monthlyParking,
@@ -192,33 +213,65 @@ export default function EcoWallet() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Eco Coins Section */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-yellow-100 p-3 rounded-lg">
-                  <Coins className="w-6 h-6 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Eco Coins</h2>
-                  <p className="text-sm text-gray-600">1 coin per 5 shared rides</p>
-                </div>
-              </div>
-              
-              <div className="text-center py-6">
-                <div className="text-4xl font-bold text-yellow-600 mb-2">
-                  {userProfile?.eco_coins || 0}
-                </div>
-                <p className="text-gray-600">Your Eco Coins</p>
-                <div className="mt-4 bg-gray-100 rounded-full h-2">
-                  <div 
-                    className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(((userProfile?.eco_coins || 0) % 5) * 20, 100)}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {5 - ((userProfile?.eco_coins || 0) % 5)} more rides to next coin
-                </p>
-              </div>
+<div className="lg:col-span-1">
+  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <div className="flex items-center mb-4">
+      <div className="bg-yellow-100 p-3 rounded-lg">
+        <Coins className="w-6 h-6 text-yellow-600" />
+      </div>
+      <div className="ml-4">
+        <h2 className="text-xl font-semibold text-gray-900">Eco Coins</h2>
+
+        {/* Tooltip explanation */}
+        <div className="text-sm text-gray-600 relative group flex items-center space-x-1">
+          <span>1 coin per 5 shared rides</span>
+          <svg
+            className="w-4 h-4 text-gray-400 cursor-pointer"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M12 20h.01M12 4v.01"
+            />
+          </svg>
+
+          <div className="absolute left-6 top-6 z-10 bg-white border border-gray-200 rounded-md shadow-md p-2 text-xs w-64 opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto pointer-events-none transition-opacity duration-200">
+            <strong>Shared rides</strong> = completed rides with both a driver and a different rider. Solo rides don't count toward eco coins.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="text-center py-6">
+      <div className="text-4xl font-bold text-yellow-600 mb-2">
+        {userProfile?.eco_coins || 0}
+      </div>
+      <p className="text-gray-600">Your Eco Coins</p>
+
+
+
+  {/* Progress bar based on shared rides toward next coin */}
+  <div className="mt-4 bg-gray-100 rounded-full h-2">
+    <div
+      className="bg-yellow-500 h-2 rounded-full transition-all duration-300"
+      style={{
+        width: `${Math.min(((userProfile?.shared_completed_rides || 0) % 5) * 20, 100)}%`,
+      }}
+    ></div>
+  </div>
+
+  <p className="text-xs text-gray-500 mt-2">
+    {userProfile?.rides_to_next_coin === 0
+      ? '🎉 You just earned a new coin!'
+      : `${userProfile?.rides_to_next_coin || 5} more shared rides to your next coin`}
+  </p>
+</div>
+
 
               <div className="border-t pt-4">
                 <div className="flex justify-between text-sm">
@@ -245,6 +298,7 @@ export default function EcoWallet() {
                         index === 2 ? 'bg-orange-100 text-orange-800' :
                         'bg-blue-100 text-blue-800'
                       }`}>
+                        
                         {index + 1}
                       </div>
                       <span className="ml-3 text-sm font-medium text-gray-900">
@@ -256,7 +310,9 @@ export default function EcoWallet() {
                       {user.eco_coins}
                     </div>
                   </div>
-                ))}
+                  
+                ))
+                }
               </div>
             </div>
           </div>
@@ -294,9 +350,21 @@ export default function EcoWallet() {
                     <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
                     <span className="text-sm font-medium text-green-800">Impact Equivalent</span>
                   </div>
-                  <p className="text-xs text-green-700">
-                    Your savings = {Math.floor((userProfile?.co2_saved || 0) / 21)} trees planted
-                  </p>
+                  <p className="text-xs text-green-700 mb-2">
+  Your savings = {(userProfile?.co2_saved || 0) / 21 < 1
+    ? `${((userProfile?.co2_saved || 0) / 21 * 100).toFixed(0)}% of your first tree planted 🎋`
+    : `${Math.floor((userProfile?.co2_saved || 0) / 21)} trees planted 🎋`}
+</p>
+
+<div className="bg-green-100 rounded-full h-2">
+  <div
+    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+    style={{
+      width: `${Math.min(((userProfile?.co2_saved || 0) / 21) * 100, 100)}%`,
+    }}
+  ></div>
+</div>
+
                   <p className="text-xs text-green-700">
                     Community savings = {Math.floor(totalCO2Saved / 21)} trees planted
                   </p>

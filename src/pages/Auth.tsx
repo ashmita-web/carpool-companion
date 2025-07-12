@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Car, Mail, Lock, User } from 'lucide-react'
+import { Car } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import Button from '../components/UI/Button'
 import Input from '../components/UI/Input'
+import { supabase } from '../lib/supabase'
 
-export default function Auth() {
-  const { user, signIn, signUp } = useAuth()
+function Auth() {
+  const { user, signIn } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -54,7 +55,7 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     setLoading(true)
@@ -64,12 +65,30 @@ export default function Auth() {
       if (isLogin) {
         await signIn(formData.email, formData.password)
       } else {
-        await signUp(formData.email, formData.password, formData.fullName)
-        setIsLogin(true) // Switch to login mode
-        setErrors({ submit: 'Account created successfully! Please sign in.' }) // Show message
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password
+        })
+
+        if (error) throw error
+
+        const userId = data.user?.id
+        if (!userId) throw new Error('Signup succeeded but no user ID returned')
+
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: userId,
+          email: formData.email,
+          full_name: formData.fullName
+        })
+
+        if (profileError) throw profileError
+
+        setIsLogin(true)
+        setErrors({ submit: 'Account created successfully! Please sign in.' })
       }
     } catch (error: any) {
-      setErrors({ submit: error.message })
+      console.error('Signup error:', error)
+      setErrors({ submit: error.message || 'Something went wrong' })
     } finally {
       setLoading(false)
     }
@@ -80,6 +99,7 @@ export default function Auth() {
       ...formData,
       [e.target.name]: e.target.value
     })
+
     if (errors[e.target.name]) {
       setErrors({
         ...errors,
@@ -108,55 +128,47 @@ export default function Auth() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             {!isLogin && (
-              <div>
-                <Input
-                  label="Full Name"
-                  name="fullName"
-                  type="text"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  placeholder="Enter your full name"
-                  error={errors.fullName}
-                />
-              </div>
+              <Input
+                label="Full Name"
+                name="fullName"
+                type="text"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                error={errors.fullName}
+              />
             )}
 
-            <div>
-              <Input
-                label="Email Address"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                error={errors.email}
-              />
-            </div>
+            <Input
+              label="Email Address"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your email"
+              error={errors.email}
+            />
 
-            <div>
-              <Input
-                label="Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                error={errors.password}
-              />
-            </div>
+            <Input
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter your password"
+              error={errors.password}
+            />
 
             {!isLogin && (
-              <div>
-                <Input
-                  label="Confirm Password"
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm your password"
-                  error={errors.confirmPassword}
-                />
-              </div>
+              <Input
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Confirm your password"
+                error={errors.confirmPassword}
+              />
             )}
           </div>
 
@@ -172,15 +184,9 @@ export default function Auth() {
             </div>
           )}
 
-          <div>
-            <Button
-              type="submit"
-              loading={loading}
-              className="w-full"
-            >
-              {isLogin ? 'Sign In' : 'Create Account'}
-            </Button>
-          </div>
+          <Button type="submit" loading={loading} className="w-full">
+            {isLogin ? 'Sign In' : 'Create Account'}
+          </Button>
 
           <div className="text-center">
             <button
@@ -196,3 +202,5 @@ export default function Auth() {
     </div>
   )
 }
+
+export default Auth

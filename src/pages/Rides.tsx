@@ -9,6 +9,8 @@ import LocationInput from '../components/Maps/LocationInput'
 import PremiumBadge from '../components/UI/PremiumBadge'
 import PremiumTooltip from '../components/UI/PremiumTooltip'
 import { format } from 'date-fns'
+import 'leaflet/dist/leaflet.css'
+import Map from '../components/Maps/Map'
 
 interface RideOffer {
   id: string
@@ -41,20 +43,17 @@ export default function Rides() {
   const [loading, setLoading] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
   const [offerLoading, setOfferLoading] = useState(false)
-  
-  // Search form state
+
   const [searchForm, setSearchForm] = useState({
     origin: '',
     destination: '',
     date: '',
-    // Premium filters
     smoking: '',
     music: '',
     pets: '',
     personality: ''
   })
-  
-  // Offer form state
+
   const [offerForm, setOfferForm] = useState({
     pickupLocation: '',
     pickupLat: 0,
@@ -67,7 +66,7 @@ export default function Rides() {
     price: '',
     preferences: ''
   })
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -79,19 +78,9 @@ export default function Rides() {
     try {
       const { data, error } = await supabase
         .from('rides')
-        .select(`
-          *,
-          profiles (
-            full_name,
-            email,
-            eco_coins,
-            is_verified,
-            is_premium
-          )
-        `)
+        .select(`*, profiles!inner (full_name, email, eco_coins, is_verified, is_premium)`) 
         .eq('type', 'offer')
         .eq('status', 'active')
-        .order('profiles.is_premium', { ascending: false })
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -106,36 +95,26 @@ export default function Rides() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     setSearchLoading(true)
-    
+
     try {
       let query = supabase
         .from('rides')
-        .select(`
-          *,
-          profiles (
-            full_name,
-            email,
-            eco_coins,
-            is_verified,
-            is_premium
-          )
-        `)
+        .select(`*, profiles!inner (full_name, email, eco_coins, is_verified, is_premium)`) 
         .eq('type', 'offer')
         .eq('status', 'active')
 
       if (searchForm.origin) {
         query = query.ilike('pickup_location', `%${searchForm.origin}%`)
       }
-      
+
       if (searchForm.destination) {
         query = query.ilike('dropoff_location', `%${searchForm.destination}%`)
       }
-      
+
       if (searchForm.date) {
         const startDate = new Date(searchForm.date)
         const endDate = new Date(startDate)
         endDate.setDate(endDate.getDate() + 1)
-        
         query = query
           .gte('departure_time', startDate.toISOString())
           .lt('departure_time', endDate.toISOString())
@@ -157,7 +136,6 @@ export default function Rides() {
 
   const handleOfferRide = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (!offerForm.pickupLocation || !offerForm.dropoffLocation || !offerForm.departureTime) {
       setErrors({
         pickup: !offerForm.pickupLocation ? 'Pickup location is required' : '',
@@ -171,38 +149,35 @@ export default function Rides() {
     setErrors({})
 
     try {
-      // Calculate pricing cap based on route (example logic)
-      let maxPrice = 100 // Default cap
-      if (offerForm.pickupLocation.toLowerCase().includes('noida') && 
-          offerForm.dropoffLocation.toLowerCase().includes('gurgaon')) {
+      let maxPrice = 100
+      if (
+        offerForm.pickupLocation.toLowerCase().includes('noida') &&
+        offerForm.dropoffLocation.toLowerCase().includes('gurgaon')
+      ) {
         maxPrice = 100
       }
-
       const price = offerForm.price ? Math.min(parseFloat(offerForm.price), maxPrice) : null
 
-      const { error } = await supabase
-        .from('rides')
-        .insert([
-          {
-            user_id: user?.id,
-            type: 'offer',
-            pickup_location: offerForm.pickupLocation,
-            pickup_lat: offerForm.pickupLat,
-            pickup_lng: offerForm.pickupLng,
-            dropoff_location: offerForm.dropoffLocation,
-            dropoff_lat: offerForm.dropoffLat,
-            dropoff_lng: offerForm.dropoffLng,
-            departure_time: offerForm.departureTime,
-            available_seats: offerForm.availableSeats,
-            price: price,
-            preferences: offerForm.preferences || null,
-            status: 'active'
-          }
-        ])
+      const { error } = await supabase.from('rides').insert([
+        {
+          user_id: user?.id,
+          type: 'offer',
+          pickup_location: offerForm.pickupLocation,
+          pickup_lat: offerForm.pickupLat,
+          pickup_lng: offerForm.pickupLng,
+          dropoff_location: offerForm.dropoffLocation,
+          dropoff_lat: offerForm.dropoffLat,
+          dropoff_lng: offerForm.dropoffLng,
+          departure_time: offerForm.departureTime,
+          available_seats: offerForm.availableSeats,
+          price,
+          preferences: offerForm.preferences || null,
+          status: 'active'
+        }
+      ])
 
       if (error) throw error
 
-      // Reset form
       setOfferForm({
         pickupLocation: '',
         pickupLat: 0,
@@ -216,10 +191,7 @@ export default function Rides() {
         preferences: ''
       })
 
-      // Refresh rides list
       fetchRideOffers()
-      
-      // Switch to find tab to see the new ride
       setActiveTab('find')
     } catch (error: any) {
       setErrors({ submit: error.message })
@@ -239,18 +211,15 @@ export default function Rides() {
 
   const requestRide = async (rideId: string, driverId: string) => {
     try {
-      const { error } = await supabase
-        .from('matches')
-        .insert([
-          {
-            rider_id: user?.id,
-            driver_id: driverId,
-            ride_id: rideId,
-            match_score: 85,
-            status: 'pending'
-          }
-        ])
-
+      const { error } = await supabase.from('matches').insert([
+        {
+          rider_id: user?.id,
+          driver_id: driverId,
+          ride_id: rideId,
+          match_score: 85,
+          status: 'pending'
+        }
+      ])
       if (error) throw error
       alert('Ride request sent successfully!')
     } catch (error) {
@@ -264,6 +233,17 @@ export default function Rides() {
       setSearchForm({ ...searchForm, [field]: value })
     })
   }
+
+  const rideMarkers = rideOffers.map((ride) => ({
+    position: { lat: ride.pickup_lat, lng: ride.pickup_lng },
+    title: `${ride.pickup_location} → ${ride.dropoff_location}`,
+    type: 'offer' as const
+  }))
+
+  const center = rideOffers.length > 0
+    ? { lat: rideOffers[0].pickup_lat, lng: rideOffers[0].pickup_lng }
+    : { lat: 28.6139, lng: 77.209 } // default: Delhi
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -324,7 +304,7 @@ export default function Rides() {
                       onChange={(e) => setSearchForm({ ...searchForm, date: e.target.value })}
                     />
                   </div>
-                  <Button type="submit" loading={searchLoading}>
+
                   {/* Premium Filters */}
                   <div className="border-t pt-4 mb-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
@@ -356,7 +336,7 @@ export default function Rides() {
                             </label>
                             <select
                               value={searchForm.music}
-                              onChange={(e) => handlePremiumFilterChange('smoking', e.target.value)}
+                              onChange={(e) => handlePremiumFilterChange('music', e.target.value)}
                               className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                               <option value="">Any</option>
@@ -447,8 +427,14 @@ export default function Rides() {
                       )}
                     </div>
                   </div>
-                    Search Rides
-                  </Button>
+
+                  <Button
+  type="submit"
+  loading={searchLoading}
+  className="mt-4 w-full md:w-auto"
+>
+  Search Rides
+</Button>
                 </form>
 
                 {/* Search Results */}
@@ -610,7 +596,7 @@ export default function Rides() {
                     <p className="text-sm text-red-600">{errors.submit}</p>
                   </div>
                 )}
-
+                
                 <Button
                   type="submit"
                   loading={offerLoading}
@@ -618,10 +604,15 @@ export default function Rides() {
                 >
                   Offer Ride
                 </Button>
+                
               </form>
             )}
           </div>
+          <div className="h-[500px] lg:sticky lg:top-24">
+            <Map center={center} markers={rideMarkers} zoom={11} className="rounded-lg shadow border h-full w-full" />
+          </div>
         </div>
+        
       </div>
     </div>
   )

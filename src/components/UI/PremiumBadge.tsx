@@ -1,3 +1,4 @@
+
 import { Crown, Shield } from 'lucide-react';
 
 interface PremiumBadgeProps {

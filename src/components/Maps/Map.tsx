@@ -84,39 +84,41 @@ export default function Map({
   }
 
   return (
-    <div className={`${className} rounded-lg overflow-hidden border border-gray-200`}>
-      <MapContainer
-        center={mapCenter}
-        zoom={zoom}
-        style={{ height: '100%', width: '100%', minHeight: '300px' }}
-        className="z-0"
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        {onLocationSelect && <MapEvents />}
-        
-        {markers.map((marker, index) => (
-          <Marker
-            key={index}
-            position={[marker.position.lat, marker.position.lng]}
-            icon={getMarkerIcon(marker.type)}
-          >
-            <Popup>
-              <div className="text-sm">
-                <strong>{marker.title}</strong>
-                <br />
-                <span className="text-gray-600">
-                  {marker.type === 'pickup' ? 'Pickup Location' : 
-                   marker.type === 'dropoff' ? 'Drop-off Location' : 'Ride Offer'}
-                </span>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+    <div className={`rounded-lg overflow-hidden border border-gray-200 ${className}`}>
+      <div className="h-[400px] w-full bg-red-100">
+        <MapContainer
+          center={mapCenter}
+          zoom={zoom}
+          style={{ height: '400px', width: '100%' }}
+          className="z-0"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+  
+          {onLocationSelect && <MapEvents />}
+  
+          {markers.map((marker, index) => (
+            <Marker
+              key={index}
+              position={[marker.position.lat, marker.position.lng]}
+              icon={getMarkerIcon(marker.type)}
+            >
+              <Popup>
+                <div className="text-sm">
+                  <strong>{marker.title}</strong>
+                  <br />
+                  <span className="text-gray-600">
+                    {marker.type === 'pickup' ? 'Pickup Location' :
+                      marker.type === 'dropoff' ? 'Drop-off Location' : 'Ride Offer'}
+                  </span>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
     </div>
   )
-}
+          }  
