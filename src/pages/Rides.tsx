@@ -7,6 +7,10 @@ import Button from '../components/UI/Button'
 import Input from '../components/UI/Input'
 import LocationInput from '../components/Maps/LocationInput'
 import PremiumBadge from '../components/UI/PremiumBadge'
+
+import PremiumTooltip from '../components/UI/PremiumTooltip'
+
+
 import { format } from 'date-fns'
 import 'leaflet/dist/leaflet.css'
 import Map from '../components/Maps/Map'
@@ -281,6 +285,162 @@ export default function Rides() {
           <div className="p-6">
             {activeTab === 'find' ? (
               <div>
+
+                {/* Search Form */}
+                <form onSubmit={handleSearch} className="mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <Input
+                      label="Origin"
+                      value={searchForm.origin}
+                      onChange={(e) => setSearchForm({ ...searchForm, origin: e.target.value })}
+                      placeholder="From where?"
+                    />
+                    <Input
+                      label="Destination"
+                      value={searchForm.destination}
+                      onChange={(e) => setSearchForm({ ...searchForm, destination: e.target.value })}
+                      placeholder="To where?"
+                    />
+                    <Input
+                      label="Date"
+                      type="date"
+                      value={searchForm.date}
+                      onChange={(e) => setSearchForm({ ...searchForm, date: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Premium Filters */}
+                  <div className="border-t pt-4 mb-4">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                      Advanced Filters
+                      {!isPremium && <span className="ml-2 text-xs text-yellow-600">(Premium Only)</span>}
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {isPremium ? (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <Cigarette className="w-3 h-3 inline mr-1" />
+                              Smoking
+                            </label>
+                            <select
+                              value={searchForm.smoking}
+                              onChange={(e) => handlePremiumFilterChange('smoking', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="no">Non-smoker</option>
+                              <option value="yes">Smoker OK</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <Music className="w-3 h-3 inline mr-1" />
+                              Music
+                            </label>
+                            <select
+                              value={searchForm.music}
+                              onChange={(e) => handlePremiumFilterChange('music', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="pop">Pop</option>
+                              <option value="rock">Rock</option>
+                              <option value="classical">Classical</option>
+                              <option value="none">No music</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <Heart className="w-3 h-3 inline mr-1" />
+                              Pets
+                            </label>
+                            <select
+                              value={searchForm.pets}
+                              onChange={(e) => handlePremiumFilterChange('pets', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="yes">Pet-friendly</option>
+                              <option value="no">No pets</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <UserCheck className="w-3 h-3 inline mr-1" />
+                              Personality
+                            </label>
+                            <select
+                              value={searchForm.personality}
+                              onChange={(e) => handlePremiumFilterChange('personality', e.target.value)}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            >
+                              <option value="">Any</option>
+                              <option value="introvert">Introvert</option>
+                              <option value="extrovert">Extrovert</option>
+                            </select>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <Cigarette className="w-3 h-3 inline mr-1" />
+                                Smoking
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <Music className="w-3 h-3 inline mr-1" />
+                                Music
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <Heart className="w-3 h-3 inline mr-1" />
+                                Pets
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                          <PremiumTooltip>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-400 mb-1">
+                                <UserCheck className="w-3 h-3 inline mr-1" />
+                                Personality
+                              </label>
+                              <select disabled className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-gray-100 text-gray-400">
+                                <option>Any</option>
+                              </select>
+                            </div>
+                          </PremiumTooltip>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+  type="submit"
+  loading={searchLoading}
+  className="mt-4 w-full md:w-auto"
+>
+  Search Rides
+</Button>
+                </form>
+
                 
                {/* Search Form */}
 <form onSubmit={handleSearch} className="mb-8">
@@ -399,6 +559,7 @@ export default function Rides() {
     Search Rides
   </Button>
 </form>
+
 
 
                 {/* Search Results */}
@@ -568,6 +729,8 @@ export default function Rides() {
                 >
                   Offer Ride
                 </Button>
+
+
               </form>
             )}
           </div>
@@ -575,6 +738,7 @@ export default function Rides() {
             <Map center={center} markers={rideMarkers} zoom={11} className="rounded-lg shadow border h-full w-full" />
           </div>
         </div>
+
       </div>
     </div>
   )
