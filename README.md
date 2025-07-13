@@ -46,24 +46,25 @@ A ride-sharing web application allowing users to offer, search, and request carp
 
 4. Environment Variables
 
-Create a .env.local file in the root with the following:
+    Create a `.env.local` file in the root with the following:
+
     ```bash
     VITE_SUPABASE_URL=your_supabase_url
     VITE_SUPABASE_ANON_KEY=your_supabase_public_key
     VITE_GROQ_API_KEY=your_groq_api_key
 
-5. Usage
+## Usage
 
 - Visit /rides to toggle between Find and Offer rides.
 - Use the Map panel to view ride pickup locations.
 - Click Request Ride on available cards (disabled for your own rides).
 
-6. Authentication & Permissions
+## Authentication & Permissions
 
 - Users must sign up and log in via the provided useAuth context.
 - Premium-only filters are gated by user role, enforced through usePremiumGuard.
 
-7. Contributing
+## Contributing
 
 - Fork the repository.
 - Create a feature branch:
